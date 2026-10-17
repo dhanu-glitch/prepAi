@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrepAI - Smart Study Companion</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #080b24, #171044, #101d45);
+            color: white;
+            min-height: 100vh;
+        }
+
+        header {
+            padding: 22px;
+            text-align: center;
+            background: rgba(15, 15, 50, 0.8);
+            border-bottom: 1px solid #5147a8;
+        }
+
+        header h1 {
+            color: #b7a5ff;
+            margin: 0;
+            font-size: 32px;
+        }
+
+        header p {
+            color: #c5c8e8;
+        }
+
+        main {
+            max-width: 950px;
+            margin: auto;
+            padding: 24px;
+        }
+
+        .welcome {
+            padding: 25px;
+            border-radius: 18px;
+            background: linear-gradient(120deg, #30236d, #173a70);
+            margin-bottom: 22px;
+        }
+
+        .welcome h2 {
+            margin-top: 0;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid #48428a;
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        button {
+            background: #8972ff;
+            color: white;
+            border: none;
+            border-radius: 9px;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-size: 15px;
+            margin-top: 8px;
+        }
+
+        button:hover {
+            background: #6b54e8;
+        }
+
+        select {
+            padding: 10px;
+            border-radius: 8px;
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .progress {
+            background: #35345d;
+            height: 10px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .bar {
+            width: 0%;
+            height: 100%;
+            background: #a58bff;
+            transition: width 0.3s;
+        }
+
+        #result {
+            color: #bcaaff;
+            line-height: 1.6;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #b8b8d7;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>💜 PrepAI</h1>
+    <p>Your Smart AI Study Companion</p>
+</header>
+
+<main>
+
+    <section class="welcome">
+        <h2>Good evening, Student! ✨</h2>
+        <p>Learn smarter. Practise daily. Improve yourself.</p>
+
+        <p>Today's study progress: <span id="percent">0%</span></p>
+
+        <div class="progress">
+            <div class="bar" id="bar"></div>
+        </div>
+    </section>
+
+    <section class="cards">
+
+        <div class="card">
+            <h2>📚 Today's Plan</h2>
+            <p>Complete your daily learning goals.</p>
+            <label>
+                <input type="checkbox" class="task">
+                Study today's lesson
+            </label>
+            <br><br>
+            <label>
+                <input type="checkbox" class="task">
+                Practise questions
+            </label>
+            <br><br>
+            <label>
+                <input type="checkbox" class="task">
+                Revise important points
+            </label>
+        </div>
+
+        <div class="card">
+            <h2>🧠 Practice Quiz</h2>
+            <p id="question">Which language is popular for AI and data science?</p>
+
+            <select id="answer">
+                <option value="">Choose your answer</option>
+                <option value="Java">Java</option>
+                <option value="Python">Python</option>
+                <option value="HTML">HTML</option>
+                <option value="CSS">CSS</option>
+            </select>
+
+            <button onclick="checkAnswer()">Submit Answer</button>
+            <p id="result"></p>
+            <button onclick="nextQuestion()">Next Question ➜</button>
+        </div>
+
+        <div class="card">
+            <h2>📊 Your Insights</h2>
+            <p>Questions answered: <span id="total">0</span></p>
+            <p>Correct answers: <span id="correct">0</span></p>
+            <p>Accuracy: <span id="accuracy">0%</span></p>
+            <button onclick="resetQuiz()">Reset Quiz</button>
+        </div>
+
+    </section>
+
+</main>
+
+<footer>
+    Made with 💜 | PrepAI Study Companion
+</footer>
+
+<script>
+    const questions = [
+        {
+            question: "Which language is popular for AI and data science?",
+            options: ["Java", "Python", "HTML", "CSS"],
+            answer: "Python",
+            explanation: "Python has many libraries for AI, machine learning and data science."
+        },
+        {
+            question: "What does HTML help us create?",
+            options: ["Web page structure", "Database", "Operating system", "Antivirus"],
+            answer: "Web page structure",
+            explanation: "HTML defines the structure and content of a web page."
+        },
+        {
+            question: "Which structure stores key-value pairs in Python?",
+            options: ["String", "Dictionary", "Integer", "Boolean"],
+            answer: "Dictionary",
+            explanation: "A Python dictionary stores data as key-value pairs."
+        },
+        {
+            question: "Which chart is useful for comparing categories?",
+            options: ["Bar chart", "Paragraph", "Folder", "Variable"],
+            answer: "Bar chart",
+            explanation: "A bar chart helps compare values across categories."
+        }
+    ];
+
+    let current = 0;
+    let total = 0;
+    let correct = 0;
+    let answered = false;
+
+    function checkAnswer() {
+        if (answered) {
+            document.getElementById("result").textContent =
+                "Click Next Question to continue!";
+            return;
+        }
+
+        const choice = document.getElementById("answer").value;
+        const result = document.getElementById("result");
+
+        if (!choice) {
+            result.textContent = "Please choose an answer first!";
+            return;
+        }
+
+        total++;
+        answered = true;
+
+        if (choice === questions[current].answer) {
+            correct++;
+            result.textContent =
+                "✅ Correct! " + questions[current].explanation;
+        } else {
+            result.textContent =
+                "❌ Correct answer: " + questions[current].answer +
+                ". " + questions[current].explanation;
+        }
+
+        updateStats();
+    }
+
+    function nextQuestion() {
+        current = (current + 1) % questions.length;
+        answered = false;
+
+        document.getElementById("question").textContent =
+            questions[current].question;
+
+        const select = document.getElementById("answer");
+        select.innerHTML = '<option value="">Choose your answer</option>';
+
+        questions[current].options.forEach(function(option) {
+            const item = document.createElement("option");
+            item.value = option;
+            item.textContent = option;
+            select.appendChild(item);
+        });
+
+        document.getElementById("result").textContent = "";
+    }
+
+    function updateStats() {
+        document.getElementById("total").textContent = total;
+        document.getElementById("correct").textContent = correct;
+
+        const accuracy = total === 0
+            ? 0
+            : Math.round((correct / total) * 100);
+
+        document.getElementById("accuracy").textContent = accuracy + "%";
+    }
+
+    function resetQuiz() {
+        total = 0;
+        correct = 0;
+        current = 0;
+        answered = false;
+
+        document.getElementById("question").textContent =
+            questions[current].question;
+
+        document.getElementById("answer").innerHTML =
+            '<option value="">Choose your answer</option>' +
+            questions[current].options.map(
+                option => `<option value="${option}">${option}</option>`
+            ).join("");
+
+        document.getElementById("result").textContent = "";
+        updateStats();
+    }
+
+    document.querySelectorAll(".task").forEach(function(task) {
+        task.addEventListener("change", function() {
+            const tasks = document.querySelectorAll(".task");
+            const completed = [...tasks].filter(t => t.checked).length;
+            const progress = Math.round((completed / tasks.length) * 100);
+
+            document.getElementById("percent").textContent = progress + "%";
+            document.getElementById("bar").style.width = progress + "%";
+        });
+    });
+</script>
+
+</body>
+</html>
